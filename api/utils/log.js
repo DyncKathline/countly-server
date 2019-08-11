@@ -56,7 +56,7 @@ var styles = {
         error: function(args) {
             for (var i = 0; i < args.length; i++) {
                 if (typeof args[i] === 'string') {
-                    args[i] = colors.bgRed.white(args[i].white);
+                    args[i] = colors.red(args[i].red);
                 }
             }
         }

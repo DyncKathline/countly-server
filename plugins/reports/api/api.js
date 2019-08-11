@@ -1,6 +1,5 @@
 var common = require('../../../api/utils/common.js'),
     reports = require("./reports"),
-    time = require('time'),
     async = require('async'),
     plugins = require('../../pluginManager.js');
 
@@ -341,7 +340,7 @@ var common = require('../../../api/utils/common.js'),
      */
     function convertToTimezone(props) {
         //convert time
-        var date = new time.Date();
+        var date = new Date();
         var serverOffset = date.getTimezoneOffset();
         date.setTimezone(props.timezone);
         var clientOffset = date.getTimezoneOffset();

@@ -163,21 +163,12 @@ function sha512Hash(str, addSalt) {
 }
 
 /**
-* Create argon2 hash string
-* @param {string} str - string to hash
-* @returns {promise} hash promise
-**/
-function md5Hash(str) {
-    return crypto.createHash('md5').update(str + '').digest('hex');
-}
-
-/**
  * Verify member for Argon2 Hash
  * @param {string} username | User name
  * @param {password} password | Password string
  * @param {Function} callback | Callback function
  */
-function verifyMemberArgon2Hash(username, password, callback) {
+function verifyMemberHash(username, password, callback) {
     var secret = countlyConfig.passwordSecret || "";
     password = password + secret;
     countlyDb.collection('members').findOne({$and: [{ $or: [ {"username": username}, {"email": username}]}]}, (err, member) => {
@@ -186,12 +177,8 @@ function verifyMemberArgon2Hash(username, password, callback) {
             var password_SHA5 = sha512Hash(password);
 
             if (member.password === password_SHA1 || member.password === password_SHA5) {
-                md5Hash(password).then(password_ARGON2 => {
-                    updateUserPasswordToArgon2(member._id, password_ARGON2);
-                    callback(undefined, member);
-                }).catch(function() {
-                    callback("Password is wrong!");
-                });
+                updateUserPassword(member._id, password);
+                callback(undefined, member);
             }
             else {
                 callback("Password is wrong!");
@@ -208,7 +195,7 @@ function verifyMemberArgon2Hash(username, password, callback) {
 * @param {string} id - id of the user document
 * @param {string} password - password to hash
 **/
-function updateUserPasswordToArgon2(id, password) {
+function updateUserPassword(id, password) {
     countlyDb.collection('members').update({ _id: id}, { $set: { password: password}});
 }
 
@@ -1110,7 +1097,7 @@ app.get(countlyConfig.path + '/api-key', function(req, res, next) {
             }
             else {
                 user.name = (user.name + "").trim();
-                verifyMemberArgon2Hash(user.name, user.pass, (err2, member) => {
+                verifyMemberHash(user.name, user.pass, (err2, member) => {
                     if (member) {
                         if (member.locked) {
                             plugins.callMethod("apikeyFailed", {req: req, res: res, next: next, data: {username: user.name}});
@@ -1149,7 +1136,7 @@ app.post(countlyConfig.path + '/mobile/login', function(req, res, next) {
     if (req.body.username && req.body.password) {
         req.body.username = (req.body.username + "").trim();
 
-        verifyMemberArgon2Hash(req.body.username, req.body.password, (err, member) => {
+        verifyMemberHash(req.body.username, req.body.password, (err, member) => {
             if (member) {
                 if (member.locked) {
                     plugins.callMethod("mobileloginFailed", {req: req, res: res, next: next, data: req.body});

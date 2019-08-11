@@ -127,12 +127,8 @@ function verifyMemberArgon2Hash(username, password, countlyDb, callback) {
             var password_SHA5 = sha512Hash(password);
 
             if (member.password === password_SHA1 || member.password === password_SHA5) {
-                md5Hash(password).then(password_ARGON2 => {
-                    updateUserPasswordToArgon2(member._id, password_ARGON2, countlyDb);
-                    callback(undefined, member);
-                }).catch(function() {
-                    callback("Password is wrong!");
-                });
+                updateUserPasswordToArgon2(member._id, password_SHA5, countlyDb);
+                callback(undefined, member);
             }
             else {
                 callback("Password is wrong!");
@@ -658,17 +654,14 @@ membersUtility.reset = function(req, callback) {
         if (req.body.password && req.body.again && req.body.prid) {
             req.body.prid += "";
             var secret = membersUtility.countlyConfig.passwordSecret || "";
-            md5Hash(req.body.password + secret).then(password => {
-                membersUtility.db.collection('password_reset').findOne({ prid: req.body.prid }, function(err, passwordReset) {
-                    membersUtility.db.collection('members').findAndModify({ _id: passwordReset.user_id }, {}, { '$set': { "password": password } }, function(err2, member) {
-                        member = member && member.ok ? member.value : null;
-                        plugins.callMethod("passwordReset", { req: req, data: member }); //only req, used for systemolgs
-                        callback(false, member);
-                    });
-                    membersUtility.db.collection('password_reset').remove({ prid: req.body.prid }, function() { });
+            var password = req.body.password + secret;
+            membersUtility.db.collection('password_reset').findOne({ prid: req.body.prid }, function(err, passwordReset) {
+                membersUtility.db.collection('members').findAndModify({ _id: passwordReset.user_id }, {}, { '$set': { "password": password } }, function(err2, member) {
+                    member = member && member.ok ? member.value : null;
+                    plugins.callMethod("passwordReset", { req: req, data: member }); //only req, used for systemolgs
+                    callback(false, member);
                 });
-            }).catch(function() {
-                callback(false, undefined);
+                membersUtility.db.collection('password_reset').remove({ prid: req.body.prid }, function() { });
             });
         }
         else {
@@ -731,11 +724,7 @@ membersUtility.settings = function(req, callback) {
                         var password_SHA5 = sha512Hash(req.body.old_pwd);
 
                         if (member.password === password_SHA1 || member.password === password_SHA5) {
-                            md5Hash(req.body.old_pwd).then(password_ARGON2 => {
-                                updateUserPasswordToArgon2(member._id, password_ARGON2, membersUtility.db);
-                            }).catch(function() {
-                                console.log("Problem updating password");
-                            });
+                            updateUserPasswordToArgon2(member._id, req.body.old_pwd, membersUtility.db);
                         }
                         else {
                             return callback(false, "user-settings.old-password-not-match");

@@ -1241,10 +1241,10 @@ var pluginManager = function pluginManager() {
                         }
                         else {
                             if (!(data.args && data.args[2] && data.args[2].ignore_errors && data.args[2].ignore_errors.indexOf(err.code) !== -1)) {
-                                console.error("Error writing " + collection + " %j %s %j", data, err, err);
-                                console.debug("From connection %j", countlyDb._cly_debug);
+                                logDbWrite.e("Error writing " + collection + " %j %s %j", data, err, err);
+                                logDbWrite.d("From connection %j", countlyDb._cly_debug);
                                 if (e) {
-                                    console.error(e.stack);
+                                    logDbWrite.e(e.stack);
                                 }
                             }
                             if (callback) {
@@ -1317,7 +1317,7 @@ var pluginManager = function pluginManager() {
                     else {
                         options = options || {};
                         //we have options
-                        logDbWrite.d(name + " " + collection + " %j %j %j" + at, selector, doc, options);
+                        console.log(name + " " + collection + " %j %j %j" + at, selector, doc, options);
                         logDbWrite.d("From connection %j", countlyDb._cly_debug);
                         if (options.upsert) {
                             var self = this;

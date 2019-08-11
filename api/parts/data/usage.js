@@ -7,61 +7,10 @@
 var usage = {},
     common = require('./../../utils/common.js'),
     geoip = require('geoip-lite'),
-    geocoder = require('offline-geocoder')(),
     log = require('../../utils/log.js')('api:usage'),
     async = require('async'),
     plugins = require('../../../plugins/pluginManager.js'),
     moment = require('moment-timezone');
-
-/**
-* Get location either from coordinate to populate country and city, or from country and city to get coordinates
-* @param {params} params - params object
-* @param {object} loc - location object    
-* @param {number} loc.lat - lattitude    
-* @param {number} loc.lon - longitude 
-* @param {string} loc.country - country 
-* @param {string} loc.city - city
-* @param {string} loc.tz - timezone
-* @returns {Promise} promise which resolves missing location parameters
-**/
-function locFromGeocoder(params, loc) {
-    return new Promise(resolve => {
-        try {
-            let promise;
-            if (loc.lat !== undefined && loc.lon !== undefined) {
-                loc.gps = true;
-                promise = geocoder.reverse(loc.lat, loc.lon);
-            }
-            else if (loc.city && loc.country) {
-                loc.gps = false;
-                promise = geocoder.location(loc.city, loc.country);
-            }
-            else {
-                promise = Promise.resolve();
-            }
-            promise.then(data => {
-                loc.country = loc.country || (data && data.country && data.country.id);
-                loc.city = loc.city || (data && data.name);
-                loc.lat = loc.lat === undefined ? data && data.coordinates && data.coordinates.latitude : loc.lat;
-                loc.lon = loc.lon === undefined ? data && data.coordinates && data.coordinates.longitude : loc.lon;
-                if (!loc.tz && data && data.tz) {
-                    var zone = moment.tz.zone(data.tz);
-                    if (zone) {
-                        loc.tz = -zone.utcOffset(new Date(params.time.mstimestamp || Date.now()));
-                    }
-                }
-                resolve(loc);
-            }, err => {
-                log.w('Error to reverse geocode: %j', err);
-                resolve(loc);
-            });
-        }
-        catch (err) {
-            log.e('Error in geocoder: %j', err, err.stack);
-            resolve(loc);
-        }
-    });
-}
 
 /**
 * Get location data from ip address
@@ -243,28 +192,10 @@ usage.processLocation = function(params) {
             }
         }
 
-        if (loc.lat !== undefined || (loc.country && loc.city)) {
-            locFromGeocoder(params, loc).then(loc2 => {
-                if (loc2.city && loc2.country && loc2.lat !== undefined) {
-                    updateLoc(params, false, loc2);
-                    return resolve();
-                }
-                else {
-                    loc2.city = loc2.country === undefined ? undefined : loc2.city;
-                    loc2.country = loc2.city === undefined ? undefined : loc2.country;
-                    locFromGeoip(loc2, params.ip_address).then(loc3 => {
-                        updateLoc(params, false, loc3);
-                        return resolve();
-                    });
-                }
-            });
-        }
-        else {
-            locFromGeoip(loc, params.ip_address).then(loc2 => {
-                updateLoc(params, false, loc2);
-                return resolve();
-            });
-        }
+        locFromGeoip(loc, params.ip_address).then(loc2 => {
+            updateLoc(params, false, loc2);
+            return resolve();
+        });
     });
 };
 
@@ -303,28 +234,10 @@ usage.setLocation = function(params) {
             }
         }
 
-        if (loc.lat !== undefined || (loc.country && loc.city)) {
-            locFromGeocoder(params, loc).then(loc2 => {
-                if (loc2.city && loc2.country && loc2.lat !== undefined) {
-                    usage.setUserLocation(params, loc2);
-                    return resolve();
-                }
-                else {
-                    loc2.city = loc2.country === undefined ? undefined : loc2.city;
-                    loc2.country = loc2.city === undefined ? undefined : loc2.country;
-                    locFromGeoip(loc2, params.ip_address).then(loc3 => {
-                        usage.setUserLocation(params, loc3);
-                        return resolve();
-                    });
-                }
-            });
-        }
-        else {
-            locFromGeoip(loc, params.ip_address).then(loc2 => {
-                usage.setUserLocation(params, loc2);
-                return resolve();
-            });
-        }
+        locFromGeoip(loc, params.ip_address).then(loc2 => {
+            usage.setUserLocation(params, loc2);
+            return resolve();
+        });
     });
 };
 
