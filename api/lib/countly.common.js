@@ -297,6 +297,18 @@ countlyCommon.periodObj = getPeriodObject();
 
 // Public Methods
 
+Date.prototype.setTimezone = function(appTimezone) {
+    if (appTimezone && appTimezone.length) {
+        _appTimezone = appTimezone;
+
+        var currTime = new Date();
+
+        _currMoment = moment(currTime);
+        _currMoment.tz(appTimezone);
+        return _currMoment;
+    }
+};
+
 /**
 * Change timezone of internal Date object
 * @param {string} appTimezone - name of the timezone

@@ -615,7 +615,19 @@ var env = process.env.NODE_ENV || 'development';
 if ('development' === env) {
     app.use(errorhandler(true));
 }
-
+//解决跨域
+app.all('*',function (req, res, next) {
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Content-Length, Authorization, Accept, X-Requested-With');
+    res.header('Access-Control-Allow-Methods', 'PUT, POST, GET, DELETE, OPTIONS');
+    if (req.method == 'OPTIONS') {
+        res.send(200);
+    }
+    else {
+        next();
+    }
+});
 app.get(countlyConfig.path + '/', function(req, res) {
     res.redirect(countlyConfig.path + '/login');
 });

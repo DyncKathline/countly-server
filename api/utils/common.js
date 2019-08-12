@@ -525,18 +525,20 @@ common.initTimeObj = function(appTimezone, reqTimestamp) {
     // Check if the timestamp parameter exists in the request and is a 10 or 13 digit integer, handling also float timestamps with ms after dot
     if (reqTimestamp && (Math.round(parseFloat(reqTimestamp, 10)) + "").length === 10 && common.isNumber(reqTimestamp)) {
         // If the received timestamp is greater than current time use the current time as timestamp
-        currTimestamp = (parseInt(reqTimestamp, 10) > time.time()) ? time.time() : parseInt(reqTimestamp, 10);
-        curMsTimestamp = (parseInt(reqTimestamp, 10) > time.time()) ? time.time() * 1000 : parseFloat(reqTimestamp, 10) * 1000;
+        var time = new Date().getTime();
+        currTimestamp = (parseInt(reqTimestamp, 10) > time) ? time : parseInt(reqTimestamp, 10);
+        curMsTimestamp = (parseInt(reqTimestamp, 10) > time) ? time * 1000 : parseFloat(reqTimestamp, 10) * 1000;
         currDate = new Date(currTimestamp * 1000);
     }
     else if (reqTimestamp && (Math.round(parseFloat(reqTimestamp, 10)) + "").length === 13 && common.isNumber(reqTimestamp)) {
+        var time = new Date().getTime();
         var tmpTimestamp = Math.floor(parseInt(reqTimestamp, 10) / 1000);
-        curMsTimestamp = (tmpTimestamp > time.time()) ? Date.now() : parseInt(reqTimestamp, 10);
-        currTimestamp = (tmpTimestamp > time.time()) ? time.time() : tmpTimestamp;
+        curMsTimestamp = (tmpTimestamp > time) ? Date.now() : parseInt(reqTimestamp, 10);
+        currTimestamp = (tmpTimestamp > time) ? time : tmpTimestamp;
         currDate = new Date(currTimestamp * 1000);
     }
     else {
-        currTimestamp = time.time(); // UTC
+        currTimestamp = new Date().getTime(); // UTC
         currDate = new Date();
         curMsTimestamp = currDate.getTime();
     }
@@ -1695,7 +1697,7 @@ common.versionCompare = function(v1, v2, options) {
 * Adjust timestamp with app's timezone for timestamp queries that should equal bucket results
 * @param {number} ts - miliseconds timestamp
 * @param {string} tz - timezone
-* @returns {number} adjusted stamp for timezone
+* @returns {number} adjusted timestamp for timezone
 */
 common.adjustTimestampByTimezone = function(ts, tz) {
     var d = new Date();
