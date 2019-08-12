@@ -67,7 +67,6 @@
     "moment-timezone": "0.5.26",
     "mongodb": "3.2.7",
     "mongoskin": "2.1.0",
-    "node-stream-zip": "^1.8.2",
     "nodemailer": "6.3.0",
     "nodemailer-sendmail-transport": "1.0.2",
     "nodemailer-smtp-pool": "2.8.3",

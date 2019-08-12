@@ -275,6 +275,47 @@ else {
 
     plugins.dispatch("/worker", {common: common});
 
+    // http.Server((req, res) => {
+    //     const params = {
+    //         qstring: {},
+    //         res: res,
+    //         req: req
+    //     };
+    //
+    //     if (req.method.toLowerCase() === 'post') {
+    //         const form = new formidable.IncomingForm();
+    //         req.body = '';
+    //         req.on('data', (data) => {
+    //             req.body += data;
+    //         });
+    //
+    //         form.parse(req, (err, fields, files) => {
+    //             params.files = files;
+    //             for (const i in fields) {
+    //                 params.qstring[i] = fields[i];
+    //             }
+    //             if (!params.apiPath) {
+    //                 processRequest(params);
+    //             }
+    //         });
+    //     }
+    //     else if (req.method.toLowerCase() === 'options') {
+    //         const headers = {};
+    //         headers["Access-Control-Allow-Origin"] = "*";
+    //         headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS";
+    //         headers["Access-Control-Allow-Headers"] = "countly-token, Content-Type";
+    //         res.writeHead(200, headers);
+    //         res.end();
+    //     }
+    //     //attempt process GET request
+    //     else if (req.method.toLowerCase() === 'get') {
+    //         processRequest(params);
+    //     }
+    //     else {
+    //         common.returnMessage(params, 405, "Method not allowed");
+    //     }
+    // }).listen(common.config.api.port, common.config.api.host || '').timeout = common.config.api.timeout || 120000;
+
     http.Server((req, res) => {
         const params = {
             qstring: {},
@@ -314,7 +355,31 @@ else {
         else {
             common.returnMessage(params, 405, "Method not allowed");
         }
-    }).listen(common.config.api.port, common.config.api.host || '').timeout = common.config.api.timeout || 120000;
+    }).listen(common.config.api.port, function () {
+        // var addr = server.address();
+        // var bind = typeof addr === 'string'
+        //   ? 'pipe ' + addr
+        //   : 'port ' + addr.port;
+        // console.log('Listening on ' + bind);
+        //countlyConfig.web.port, countlyConfig.web.host || ''
+        var host = getLocalIP();
+        console.log("Listening on %s:%s", host, common.config.api.port);
+    }).timeout = common.config.api.timeout || 120000;
+
+    function getLocalIP() {
+        const os = require('os');
+        var interfaces = os.networkInterfaces();
+        for (var devName in interfaces) {
+            var iface = interfaces[devName];
+            for (var i = 0; i < iface.length; i++) {
+                var alias = iface[i];
+                if (alias.family === 'IPv4' && alias.address !== '127.0.0.1' && !alias.internal) {
+                    return alias.address;
+                }
+            }
+        }
+        return "localhost";
+    }
 
     plugins.loadConfigs(common.db);
 }

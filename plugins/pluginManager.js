@@ -1317,7 +1317,7 @@ var pluginManager = function pluginManager() {
                     else {
                         options = options || {};
                         //we have options
-                        console.log(name + " " + collection + " %j %j %j" + at, selector, doc, options);
+                        logDbWrite.d(name + " " + collection + " %j %j %j" + at, selector, doc, options);
                         logDbWrite.d("From connection %j", countlyDb._cly_debug);
                         if (options.upsert) {
                             var self = this;
